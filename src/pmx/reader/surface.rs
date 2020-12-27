@@ -27,16 +27,16 @@ impl<R: Read> SurfaceReader<R> {
     })
   }
 
-  pub fn next_surface<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>>(&mut self) -> Result<Option<[I; 3]>, Error> {
+  pub fn next_surface<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>>(&mut self) -> Result<Option<[I; 3]>, Error> {
     if self.remaining <= 0 {
       return Ok(None)
     }
 
     self.remaining -= 3;
     Ok(Some([
-      self.read.read_index(self.settings.bone_index_size)?,
-      self.read.read_index(self.settings.bone_index_size)?,
-      self.read.read_index(self.settings.bone_index_size)?]))
+      self.read.read_vertex_index(self.settings.vertex_index_size)?,
+      self.read.read_vertex_index(self.settings.vertex_index_size)?,
+      self.read.read_vertex_index(self.settings.vertex_index_size)?]))
   }
 
   pub fn iter<I>(&mut self) -> SurfaceIterator<R, I> {
@@ -52,7 +52,7 @@ pub struct SurfaceIterator<'a, R, I = i32> {
   phantom: PhantomData<I>
 }
 
-impl<R: Read, I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> FallibleIterator for SurfaceIterator<'_, R, I> {
+impl<R: Read, I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>> FallibleIterator for SurfaceIterator<'_, R, I> {
   type Item = [I; 3];
   type Error = Error;
 
