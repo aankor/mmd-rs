@@ -4,7 +4,6 @@ use crate::{Error, Settings, reader::helpers::ReadHelpers, pmx::types::*};
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
 pub struct HeaderReader<R> {
   pub version: f32,
   pub settings: Settings,

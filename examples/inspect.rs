@@ -1,5 +1,5 @@
 use std::env;
-use mmd::pmx::Error;
+use mmd::Error;
 use std::io::BufReader;
 use std::fs::File;
 use fallible_iterator::FallibleIterator;
