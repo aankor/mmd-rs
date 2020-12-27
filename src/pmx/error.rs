@@ -1,21 +1,16 @@
 use std::borrow::Cow;
+use err_derive::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
-  Io(std::io::Error),
-  WrongSignature([u8; 4]),
-  GlobalsCountLessThan8(u8),
-  UnknownIndexSize(u8),
-  UnknownTextEncoding(u8),
-  DecodeText(Cow<'static, str>),
-  UnknownWeightType(u8),
-  IndexOverflow,
-  InvalidEnvironmentBlendMode(u8),
-  InvalidToonReference(u8)
-}
-
-impl From<std::io::Error> for Error {
-  fn from(e: std::io::Error) -> Self {
-    Self::Io(e)
-  }
+  #[error(display = "{}", _0)] Io(#[error(source)] std::io::Error),
+  #[error(display = "Wrong signature {:?}", _0)] WrongSignature([u8; 4]),
+  #[error(display = "Globals count less than 8 {}", _0)] GlobalsCountLessThan8(u8),
+  #[error(display = "Unknown index size {}", _0)] UnknownIndexSize(u8),
+  #[error(display = "Unknown text encoding {}", _0)] UnknownTextEncoding(u8),
+  #[error(display = "Decode text {}", _0)] DecodeText(Cow<'static, str>),
+  #[error(display = "Unknown weigh type {}", _0)] UnknownWeightType(u8),
+  #[error(display = "Index overflow")] IndexOverflow,
+  #[error(display = "Invalid environment blendMode {}", _0)] InvalidEnvironmentBlendMode(u8),
+  #[error(display = "Invalid toon reference {}", _0)] InvalidToonReference(u8)
 }

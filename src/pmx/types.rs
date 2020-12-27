@@ -1,4 +1,4 @@
-use crate::pmx::Error;
+use crate::Error;
 use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 

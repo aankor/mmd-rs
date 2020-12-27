@@ -2,7 +2,7 @@ use byteorder::{ReadBytesExt, LE};
 use encoding::all::{UTF_8, UTF_16LE};
 use encoding::{Encoding, DecoderTrap};
 use crate::pmx::types::*;
-use crate::pmx::Error;
+use crate::Error;
 use std::io::Read;
 use std::convert::TryFrom;
 

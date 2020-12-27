@@ -1,9 +1,9 @@
-use crate::pmx::{Settings, Error};
+use crate::{Settings, Error};
 use std::io::Read;
-use crate::pmx::reader::SurfaceReader;
+use crate::reader::SurfaceReader;
 use byteorder::{ReadBytesExt, LE};
 use fallible_iterator::FallibleIterator;
-use crate::pmx::reader::helpers::ReadHelpers;
+use crate::reader::helpers::ReadHelpers;
 
 pub struct TextureReader<R> {
   pub settings: Settings,

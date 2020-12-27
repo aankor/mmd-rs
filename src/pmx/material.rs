@@ -1,5 +1,5 @@
 use enumflags2::BitFlags;
-use crate::pmx::Error;
+use crate::Error;
 use std::fmt::{Display, Formatter, Debug};
 use std::convert::TryFrom;
 use itertools::Itertools;

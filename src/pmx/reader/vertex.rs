@@ -1,6 +1,6 @@
 use byteorder::{ReadBytesExt, LE};
 use std::io::Read;
-use crate::pmx::{Error, Settings, reader::{HeaderReader, helpers::ReadHelpers}, Vertex, weight_deform::*};
+use crate::{Error, Settings, reader::{HeaderReader, helpers::ReadHelpers}, Vertex, pmx::weight_deform::*};
 use std::convert::TryFrom;
 use std::marker::PhantomData;
 use fallible_iterator::FallibleIterator;

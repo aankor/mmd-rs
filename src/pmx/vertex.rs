@@ -1,4 +1,4 @@
-use crate::pmx::WeightDeform;
+use crate::WeightDeform;
 
 pub struct Vertex<I> {
   pub position: [f32; 3],

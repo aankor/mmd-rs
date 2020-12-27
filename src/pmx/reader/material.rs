@@ -1,4 +1,4 @@
-use crate::pmx::{Error, Settings, reader::TextureReader, reader::helpers::ReadHelpers, material::*};
+use crate::{Error, Settings, reader::TextureReader, reader::helpers::ReadHelpers, pmx::material::*};
 use std::io::Read;
 use fallible_iterator::FallibleIterator;
 use byteorder::{ReadBytesExt, LE};
