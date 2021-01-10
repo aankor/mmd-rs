@@ -5,3 +5,4 @@ pub mod reader;
 pub mod vertex;
 pub mod weight_deform;
 pub mod material;
+pub mod bone;

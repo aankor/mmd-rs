@@ -15,22 +15,29 @@ fn main() -> Result<(), Error> {
   println!("{}", header);
 
   let vertices = VertexReader::<_>::new(header)?;
-  println!("Vertex count: {}", vertices.count);
+  println!("\nVertex count: {}", vertices.count);
 
   let surfaces = SurfaceReader::<_>::new(vertices)?;
-  println!("Surface count: {}", surfaces.count);
+  println!("\nSurface count: {}", surfaces.count);
 
   let mut textures = TextureReader::new(surfaces)?;
-  println!("Textures:");
+  println!("\nTextures:");
   textures.iter().enumerate().for_each(|(i, t)| {
     println!("{}) {}", i, t);
     Ok(())
   })?;
 
   let mut materials = MaterialReader::<_>::new(textures)?;
-  println!("Materials:");
+  println!("\nMaterials:");
   materials.iter::<i32>().enumerate().for_each(|(i, m)| {
-    println!("{}) {}", i, m);
+    println!("\n{}) {}", i, m);
+    Ok(())
+  })?;
+  
+  let mut bones = BoneReader::<_>::new(materials)?;
+  println!("\n\nBones:");
+  bones.iter::<i32>().enumerate().for_each(|(i, b)| {
+    println!("\n{}) {}", i, b);
     Ok(())
   })?;
 
