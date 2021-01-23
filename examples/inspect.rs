@@ -1,16 +1,15 @@
-use std::env;
 use mmd::Error;
-use std::io::BufReader;
+use std::env;
 use std::fs::File;
-use fallible_iterator::FallibleIterator;
+use std::io::BufReader;
 
 fn main() -> Result<(), Error> {
   let filename = env::args().skip(1).next().unwrap();
+  println!("Inspect file: {}", filename);
 
   use mmd::pmx::reader::*;
 
-  let header = HeaderReader::new(
-    BufReader::new(File::open(filename)?))?;
+  let header = HeaderReader::new(BufReader::new(File::open(filename)?))?;
 
   println!("{}", header);
 
@@ -22,25 +21,21 @@ fn main() -> Result<(), Error> {
 
   let mut textures = TextureReader::new(surfaces)?;
   println!("\nTextures:");
-  textures.iter().enumerate().for_each(|(i, t)| {
-    println!("{}) {}", i, t);
-    Ok(())
-  })?;
+  for (i, t) in textures.iter().enumerate() {
+    println!("{}) {}", i, t?);
+  }
 
   let mut materials = MaterialReader::<_>::new(textures)?;
   println!("\nMaterials:");
-  materials.iter::<i32>().enumerate().for_each(|(i, m)| {
-    println!("\n{}) {}", i, m);
-    Ok(())
-  })?;
-  
+  for (i, m) in materials.iter::<i32>().enumerate() {
+    println!("\n{}) {}", i, m?);
+  }
+
   let mut bones = BoneReader::<_>::new(materials)?;
   println!("\n\nBones:");
-  bones.iter::<i32>().enumerate().for_each(|(i, b)| {
-    println!("\n{}) {}", i, b);
-    Ok(())
-  })?;
-
+  for (i, b) in bones.iter::<i32>().enumerate() {
+    println!("\n{}) {}", i, b?);
+  }
 
   Ok(())
 }

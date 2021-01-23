@@ -1,9 +1,7 @@
-use crate::{Settings, Error};
-use std::io::Read;
 use crate::reader::SurfaceReader;
+use crate::{reader::helpers::ReadHelpers, Result, Settings};
 use byteorder::{ReadBytesExt, LE};
-use fallible_iterator::FallibleIterator;
-use crate::reader::helpers::ReadHelpers;
+use std::io::Read;
 
 pub struct TextureReader<R> {
   pub settings: Settings,
@@ -13,7 +11,7 @@ pub struct TextureReader<R> {
 }
 
 impl<R: Read> TextureReader<R> {
-  pub fn new(mut v: SurfaceReader<R>) -> Result<TextureReader<R>, Error> {
+  pub fn new(mut v: SurfaceReader<R>) -> Result<TextureReader<R>> {
     while v.remaining > 0 {
       v.next_surface::<i32>()?;
     }
@@ -27,9 +25,9 @@ impl<R: Read> TextureReader<R> {
     })
   }
 
-  pub fn next(&mut self) -> Result<Option<String>, Error> {
+  pub fn next(&mut self) -> Result<Option<String>> {
     if self.remaining <= 0 {
-      return Ok(None)
+      return Ok(None);
     }
 
     self.remaining -= 1;
@@ -38,21 +36,18 @@ impl<R: Read> TextureReader<R> {
   }
 
   pub fn iter(&mut self) -> TextureIterator<R> {
-    TextureIterator {
-      reader: self
-    }
+    TextureIterator { reader: self }
   }
 }
 
 pub struct TextureIterator<'a, R> {
-  reader: &'a mut TextureReader<R>
+  reader: &'a mut TextureReader<R>,
 }
 
-impl<R: Read> FallibleIterator for TextureIterator<'_, R> {
-  type Item = String;
-  type Error = Error;
+impl<R: Read> Iterator for TextureIterator<'_, R> {
+  type Item = Result<String>;
 
-  fn next(&mut self) -> Result<Option<Self::Item>, Self::Error> {
-    self.reader.next()
+  fn next(&mut self) -> Option<Self::Item> {
+    self.reader.next().map_or(None, |v| v.map(Ok))
   }
 }

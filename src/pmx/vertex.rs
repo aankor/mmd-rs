@@ -6,5 +6,5 @@ pub struct Vertex<I> {
   pub uv: [f32; 2],
   pub additional: [[f32; 4]; 4],
   pub weight_deform: WeightDeform<I>,
-  pub edge_scale: f32
+  pub edge_scale: f32,
 }

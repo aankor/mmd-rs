@@ -1,20 +1,20 @@
-use enumflags2::BitFlags;
 use crate::Error;
-use std::fmt::{Display, Formatter, Debug};
-use std::convert::TryFrom;
+use enumflags2::BitFlags;
 use itertools::Itertools;
+use std::convert::TryFrom;
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(BitFlags, Copy, Clone, PartialEq, Debug)]
 #[repr(u8)]
 pub enum DrawingFlags {
-  NoCull        = 0b00000001,
-  GroundShadow  = 0b00000010,
-  DrawShadow    = 0b00000100,
+  NoCull = 0b00000001,
+  GroundShadow = 0b00000010,
+  DrawShadow = 0b00000100,
   ReceiveShadow = 0b00001000,
-  HasEdge       = 0b00010000,
-  VertexColor   = 0b00100000,
-  PointDrawing  = 0b01000000,
-  LineDrawing   = 0b10000000
+  HasEdge = 0b00010000,
+  VertexColor = 0b00100000,
+  PointDrawing = 0b01000000,
+  LineDrawing = 0b10000000,
 }
 
 struct DrawingFlagsFmt(BitFlags<DrawingFlags>);
@@ -31,7 +31,7 @@ pub enum EnvironmentBlendMode {
   Disabled = 0,
   Multiply = 1,
   Additive = 2,
-  AdditionalVec4 = 3
+  AdditionalVec4 = 3,
 }
 
 impl Display for EnvironmentBlendMode {
@@ -54,7 +54,7 @@ impl TryFrom<u8> for EnvironmentBlendMode {
       1 => EnvironmentBlendMode::Multiply,
       2 => EnvironmentBlendMode::Additive,
       3 => EnvironmentBlendMode::AdditionalVec4,
-      e => return Err(Error::InvalidEnvironmentBlendMode(e))
+      e => return Err(Error::InvalidEnvironmentBlendMode(e)),
     })
   }
 }
@@ -69,7 +69,7 @@ impl<I: Display> Display for Toon<I> {
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
     match self {
       Toon::Texture(t) => write!(f, "texture({})", t),
-      Toon::Internal(i) => write!(f, "internal({})", i)
+      Toon::Internal(i) => write!(f, "internal({})", i),
     }
   }
 }
@@ -89,19 +89,32 @@ pub struct Material<I = i32> {
   pub environment_blend_mode: EnvironmentBlendMode,
   pub toon: Toon<I>,
   pub metadata: String,
-  pub surface_count: i32
+  pub surface_count: i32,
 }
 
 impl<I: Display> Display for Material<I> {
   fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-    write!(f,
-           r"local name: {}, universal name: {}
+    write!(
+      f,
+      r"local name: {}, universal name: {}
 diffuse: {:?}, specular: {:?}/{}, ambient: {:?}, flags: {}
 edge: {:?}/{}, texture: {}, environment: {}/{},
 toon: {}, metadata: {}, surfaces: {}",
-           self.local_name, self.universal_name,
-           self.diffuse_color, self.specular_color, self.specular_strength, self.ambient_color, DrawingFlagsFmt(self.draw_flags),
-           self.edge_color, self.edge_scale, self.texture_index, self.environment_index, self.environment_blend_mode,
-           self.toon, self.metadata, self.surface_count)
+      self.local_name,
+      self.universal_name,
+      self.diffuse_color,
+      self.specular_color,
+      self.specular_strength,
+      self.ambient_color,
+      DrawingFlagsFmt(self.draw_flags),
+      self.edge_color,
+      self.edge_scale,
+      self.texture_index,
+      self.environment_index,
+      self.environment_blend_mode,
+      self.toon,
+      self.metadata,
+      self.surface_count
+    )
   }
 }

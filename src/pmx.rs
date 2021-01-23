@@ -1,8 +1,8 @@
-pub mod types;
+pub mod bone;
 pub mod error;
-pub mod settings;
+pub mod material;
 pub mod reader;
+pub mod settings;
+pub mod types;
 pub mod vertex;
 pub mod weight_deform;
-pub mod material;
-pub mod bone;

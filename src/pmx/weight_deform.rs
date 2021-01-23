@@ -1,11 +1,11 @@
 pub struct Bdef1<I> {
-  pub bone_index: I
+  pub bone_index: I,
 }
 
 pub struct Bdef2<I> {
   pub bone_1_index: I,
   pub bone_2_index: I,
-  pub bone_1_weight: f32
+  pub bone_1_weight: f32,
 }
 
 pub struct Bdef4<I> {
@@ -44,5 +44,5 @@ pub enum WeightDeform<I> {
   Bdef2(Bdef2<I>),
   Bdef4(Bdef4<I>),
   Sdef(Sdef<I>),
-  Qdef(Qdef<I>)
+  Qdef(Qdef<I>),
 }
