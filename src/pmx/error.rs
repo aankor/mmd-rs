@@ -23,6 +23,10 @@ pub enum Error {
   InvalidEnvironmentBlendMode(u8),
   #[error(display = "Invalid toon reference {}", _0)]
   InvalidToonReference(u8),
+  #[error(display = "Invalid morph type {}", _0)]
+  InvalidMorphType(u8),
+  #[error(display = "Invalid material offset method {}", _0)]
+  InvalidMaterialOffsetMethod(u8),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

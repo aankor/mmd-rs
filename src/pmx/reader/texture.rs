@@ -1,5 +1,7 @@
-use crate::reader::SurfaceReader;
-use crate::{reader::helpers::ReadHelpers, Result, Settings};
+use crate::{
+  reader::{helpers::ReadHelpers, SurfaceReader},
+  Result, Settings,
+};
 use byteorder::{ReadBytesExt, LE};
 use std::io::Read;
 

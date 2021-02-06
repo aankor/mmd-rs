@@ -1,5 +1,4 @@
-use crate::pmx::types::*;
-use crate::{Error, Result};
+use crate::{pmx::types::*, Error, Result};
 use byteorder::{ReadBytesExt, LE};
 use encoding::all::{UTF_16LE, UTF_8};
 use encoding::{DecoderTrap, Encoding};
@@ -40,10 +39,7 @@ pub(crate) trait ReadHelpers: Read {
     ])
   }
 
-  fn read_index<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>>(
-    &mut self,
-    size: IndexSize,
-  ) -> Result<I> {
+  fn read_index<I: Index>(&mut self, size: IndexSize) -> Result<I> {
     match size {
       IndexSize::I8 => I::try_from(self.read_i8()?).map_err(|_| Error::IndexOverflow),
       IndexSize::I16 => I::try_from(self.read_i16::<LE>()?).map_err(|_| Error::IndexOverflow),
@@ -51,10 +47,7 @@ pub(crate) trait ReadHelpers: Read {
     }
   }
 
-  fn read_vertex_index<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>>(
-    &mut self,
-    size: IndexSize,
-  ) -> Result<I> {
+  fn read_vertex_index<I: VertexIndex>(&mut self, size: IndexSize) -> Result<I> {
     match size {
       IndexSize::I8 => I::try_from(self.read_u8()?).map_err(|_| Error::IndexOverflow),
       IndexSize::I16 => I::try_from(self.read_u16::<LE>()?).map_err(|_| Error::IndexOverflow),

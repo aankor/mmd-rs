@@ -1,6 +1,7 @@
 pub mod bone;
 pub mod error;
 pub mod material;
+pub mod morph;
 pub mod reader;
 pub mod settings;
 pub mod types;

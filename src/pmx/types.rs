@@ -60,3 +60,9 @@ impl TryFrom<u8> for IndexSize {
     }
   }
 }
+
+pub trait Index: TryFrom<i8> + TryFrom<i16> + TryFrom<i32> {}
+impl<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> Index for I {}
+
+pub trait VertexIndex: TryFrom<u8> + TryFrom<u16> + TryFrom<i32> {}
+impl<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>> VertexIndex for I {}
