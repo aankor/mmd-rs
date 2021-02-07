@@ -2,7 +2,6 @@ use crate::{pmx::types::*, Error, Result};
 use byteorder::{ReadBytesExt, LE};
 use encoding::all::{UTF_16LE, UTF_8};
 use encoding::{DecoderTrap, Encoding};
-use std::convert::TryFrom;
 use std::io::Read;
 
 pub(crate) trait ReadHelpers: Read {
