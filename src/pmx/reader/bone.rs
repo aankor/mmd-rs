@@ -1,9 +1,10 @@
 use crate::{
-  pmx::bone::*, reader::helpers::ReadHelpers, reader::MaterialReader, Error, Result, Settings,
+  pmx::bone::*,
+  reader::{helpers::ReadHelpers, MaterialReader},
+  Error, Index, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use enumflags2::BitFlags;
-use std::convert::TryFrom;
 use std::io::Read;
 use std::marker::PhantomData;
 
@@ -29,7 +30,7 @@ impl<R: Read> BoneReader<R> {
     })
   }
 
-  pub fn next<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>>(&mut self) -> Result<Option<Bone<I>>> {
+  pub fn next<I: Index>(&mut self) -> Result<Option<Bone<I>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -137,7 +138,7 @@ pub struct BoneIterator<'a, R, I = i32> {
   phantom: PhantomData<I>,
 }
 
-impl<R: Read, I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> Iterator for BoneIterator<'_, R, I> {
+impl<R: Read, I: Index> Iterator for BoneIterator<'_, R, I> {
   type Item = Result<Bone<I>>;
 
   fn next(&mut self) -> Option<Self::Item> {

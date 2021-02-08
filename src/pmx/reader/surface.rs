@@ -1,6 +1,8 @@
-use crate::{reader::helpers::ReadHelpers, reader::VertexReader, Result, Settings};
+use crate::{
+  reader::{helpers::ReadHelpers, VertexReader},
+  Result, Settings, VertexIndex,
+};
 use byteorder::{ReadBytesExt, LE};
-use std::convert::TryFrom;
 use std::io::Read;
 use std::marker::PhantomData;
 
@@ -26,9 +28,7 @@ impl<R: Read> SurfaceReader<R> {
     })
   }
 
-  pub fn next_surface<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>>(
-    &mut self,
-  ) -> Result<Option<[I; 3]>> {
+  pub fn next_surface<I: VertexIndex>(&mut self) -> Result<Option<[I; 3]>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -60,7 +60,7 @@ pub struct SurfaceIterator<'a, R, I = i32> {
   phantom: PhantomData<I>,
 }
 
-impl<R: Read, I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>> Iterator for SurfaceIterator<'_, R, I> {
+impl<R: Read, I: VertexIndex> Iterator for SurfaceIterator<'_, R, I> {
   type Item = Result<[I; 3]>;
 
   fn next(&mut self) -> Option<Self::Item> {

@@ -37,5 +37,11 @@ fn main() -> Result<(), Error> {
     println!("\n{}) {}", i, b?);
   }
 
+  let mut morphs = MorphReader::<_>::new(bones)?;
+  println!("\n\nMorphs:");
+  for (i, b) in morphs.iter::<i32, i32, i32, i32, i32>().enumerate() {
+    println!("\n{}) {}", i, b?);
+  }
+
   Ok(())
 }

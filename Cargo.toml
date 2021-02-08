@@ -1,6 +1,6 @@
 [package]
 name = "mmd"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["aankor <lambdasound@yandex.ru>"]
 license = "BSD-2-Clause"
 description = "Miku Miku Dance format parser for rust programming language"

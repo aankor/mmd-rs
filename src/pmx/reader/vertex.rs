@@ -1,10 +1,9 @@
 use crate::{
   pmx::weight_deform::*,
   reader::{helpers::ReadHelpers, HeaderReader},
-  Error, Result, Settings, Vertex,
+  Error, Index, Result, Settings, Vertex,
 };
 use byteorder::{ReadBytesExt, LE};
-use std::convert::TryFrom;
 use std::io::Read;
 use std::marker::PhantomData;
 
@@ -26,9 +25,7 @@ impl<R: Read> VertexReader<R> {
     })
   }
 
-  pub fn next_vertex<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>>(
-    &mut self,
-  ) -> Result<Option<Vertex<I>>> {
+  pub fn next_vertex<I: Index>(&mut self) -> Result<Option<Vertex<I>>> {
     if self.remaining == 0 {
       return Ok(None);
     }
@@ -104,9 +101,7 @@ pub struct VertexIterator<'a, R, I = i32> {
   phantom: PhantomData<I>,
 }
 
-impl<'a, R: Read, I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> Iterator
-  for VertexIterator<'a, R, I>
-{
+impl<'a, R: Read, I: Index> Iterator for VertexIterator<'a, R, I> {
   type Item = Result<Vertex<I>>;
 
   fn next(&mut self) -> Option<Self::Item> {

@@ -1,5 +1,7 @@
 use crate::{
-  pmx::material::*, reader::helpers::ReadHelpers, reader::TextureReader, Error, Result, Settings,
+  pmx::material::*,
+  reader::{helpers::ReadHelpers, TextureReader},
+  Error, Index, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use enumflags2::BitFlags;
@@ -29,9 +31,7 @@ impl<R: Read> MaterialReader<R> {
     })
   }
 
-  pub fn next<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>>(
-    &mut self,
-  ) -> Result<Option<Material<I>>> {
+  pub fn next<I: Index>(&mut self) -> Result<Option<Material<I>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -74,9 +74,7 @@ pub struct MaterialIterator<'a, R, I = i32> {
   phantom: PhantomData<I>,
 }
 
-impl<R: Read, I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> Iterator
-  for MaterialIterator<'_, R, I>
-{
+impl<R: Read, I: Index> Iterator for MaterialIterator<'_, R, I> {
   type Item = Result<Material<I>>;
 
   fn next(&mut self) -> Option<Self::Item> {
