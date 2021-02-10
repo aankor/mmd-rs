@@ -1,6 +1,8 @@
+use arrayvec::ArrayVec;
+
 use crate::Error;
-use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
+use std::{convert::TryFrom, fmt::Debug, iter::FromIterator};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 #[repr(u8)]
@@ -61,8 +63,53 @@ impl TryFrom<u8> for IndexSize {
   }
 }
 
-pub trait Index: TryFrom<i8> + TryFrom<i16> + TryFrom<i32> {}
-impl<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32>> Index for I {}
+pub trait Index: TryFrom<i8> + TryFrom<i16> + TryFrom<i32> + Clone + Debug + Eq {}
+impl<I: TryFrom<i8> + TryFrom<i16> + TryFrom<i32> + Clone + Debug + Eq> Index for I {}
 
-pub trait VertexIndex: TryFrom<u8> + TryFrom<u16> + TryFrom<i32> {}
-impl<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32>> VertexIndex for I {}
+pub trait VertexIndex: TryFrom<u8> + TryFrom<u16> + TryFrom<i32> + Clone + Debug + Eq {}
+impl<I: TryFrom<u8> + TryFrom<u16> + TryFrom<i32> + Clone + Debug + Eq> VertexIndex for I {}
+
+pub trait Config {
+  type VertexIndex: VertexIndex;
+  type TextureIndex: Index;
+  type MaterialIndex: Index;
+  type BoneIndex: Index;
+  type MorphIndex: Index;
+  type RigidbodyIndex: Index;
+
+  type Vec2: From<[f32; 2]> + Clone + Debug + PartialEq;
+  type Vec3: From<[f32; 3]> + Clone + Debug + PartialEq;
+  type Vec4: From<[f32; 4]> + Clone + Debug + PartialEq;
+  type AdditionalVec4s: FromIterator<Self::Vec4> + Clone + Debug + PartialEq;
+}
+
+pub struct DefaultConfig;
+
+impl Config for DefaultConfig {
+  type VertexIndex = u32;
+  type TextureIndex = i32;
+  type MaterialIndex = i32;
+  type BoneIndex = i32;
+  type MorphIndex = i32;
+  type RigidbodyIndex = i32;
+
+  #[cfg(feature = "vek")]
+  type Vec2 = vek::Vec2<f32>;
+  #[cfg(not(feature = "vek"))]
+  type Vec2 = [f32; 2];
+
+  #[cfg(feature = "vek")]
+  type Vec3 = vek::Vec3<f32>;
+  #[cfg(not(feature = "vek"))]
+  type Vec3 = [f32; 3];
+
+  #[cfg(feature = "vek")]
+  type Vec4 = vek::Vec4<f32>;
+  #[cfg(not(feature = "vek"))]
+  type Vec4 = [f32; 4];
+
+  #[cfg(feature = "arrayvec")]
+  type AdditionalVec4s = ArrayVec<[Self::Vec4; 4]>;
+  #[cfg(not(feature = "arrayvec"))]
+  type AdditionalVec4s = Vec<Self::Vec4>;
+}

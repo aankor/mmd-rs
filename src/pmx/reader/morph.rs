@@ -1,7 +1,7 @@
 use crate::{
   pmx::morph::*,
   reader::{helpers::ReadHelpers, BoneReader},
-  Error, Index, Result, Settings, VertexIndex,
+  Config, DefaultConfig, Error, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use std::convert::TryFrom;
@@ -18,7 +18,7 @@ pub struct MorphReader<R> {
 impl<R: Read> MorphReader<R> {
   pub fn new(mut b: BoneReader<R>) -> Result<MorphReader<R>> {
     while b.remaining > 0 {
-      b.next::<i32>()?;
+      b.next::<DefaultConfig>()?;
     }
     let count = b.read.read_i32::<LE>()?;
 
@@ -30,14 +30,7 @@ impl<R: Read> MorphReader<R> {
     })
   }
 
-  pub fn next<I, VI, BI, MI, RBI>(&mut self) -> Result<Option<Morph<I, VI, BI, MI, RBI>>>
-  where
-    I: Index,
-    VI: VertexIndex,
-    BI: Index,
-    MI: Index,
-    RBI: Index,
-  {
+  pub fn next<C: Config>(&mut self) -> Result<Option<Morph<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -73,27 +66,27 @@ impl<R: Read> MorphReader<R> {
     }))
   }
 
-  pub fn iter<I, VI, BI, MI, RBI>(&mut self) -> MorphIterator<R, I, VI, BI, MI, RBI> {
+  pub fn iter<C>(&mut self) -> MorphIterator<R, C> {
     MorphIterator {
       reader: self,
       phantom: PhantomData,
     }
   }
 
-  fn next_morph_offsets<I: Index>(&mut self, count: u32) -> Result<Vec<MorphOffset<I>>> {
+  fn next_morph_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<GroupOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
-      offsets.push(MorphOffset {
+      offsets.push(GroupOffset {
         morph: self.read.read_index(self.settings.morph_index_size)?,
-        rate: self.read.read_f32::<LE>()?,
+        influence: self.read.read_f32::<LE>()?,
       })
     }
 
     Ok(offsets)
   }
 
-  fn next_vertex_offsets<VI: VertexIndex>(&mut self, count: u32) -> Result<Vec<VertexOffset<VI>>> {
+  fn next_vertex_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<VertexOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
@@ -101,28 +94,28 @@ impl<R: Read> MorphReader<R> {
         vertex: self
           .read
           .read_vertex_index(self.settings.vertex_index_size)?,
-        offset: self.read.read_vec3()?,
+        offset: self.read.read_vec3::<C>()?,
       })
     }
 
     Ok(offsets)
   }
 
-  fn next_bone_offsets<BI: Index>(&mut self, count: u32) -> Result<Vec<BoneOffset<BI>>> {
+  fn next_bone_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<BoneOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
       offsets.push(BoneOffset {
         bone: self.read.read_index(self.settings.bone_index_size)?,
-        translation: self.read.read_vec3()?,
-        rotation: self.read.read_vec4()?,
+        translation: self.read.read_vec3::<C>()?,
+        rotation: self.read.read_vec4::<C>()?,
       })
     }
 
     Ok(offsets)
   }
 
-  fn next_uv_offsets<VI: VertexIndex>(&mut self, count: u32) -> Result<Vec<UVOffset<VI>>> {
+  fn next_uv_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<UVOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
@@ -130,44 +123,44 @@ impl<R: Read> MorphReader<R> {
         vertex: self
           .read
           .read_vertex_index(self.settings.vertex_index_size)?,
-        offset: self.read.read_vec4()?,
+        offset: self.read.read_vec4::<C>()?,
       })
     }
 
     Ok(offsets)
   }
 
-  fn next_material_offsets<MI: Index>(&mut self, count: u32) -> Result<Vec<MaterialOffset<MI>>> {
+  fn next_material_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<MaterialOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
       offsets.push(MaterialOffset {
         material: self.read.read_index(self.settings.material_index_size)?,
         method: OffsetMethod::try_from(self.read.read_u8()?)?,
-        diffuse_color: self.read.read_vec4()?,
-        specular_color: self.read.read_vec3()?,
+        diffuse_color: self.read.read_vec4::<C>()?,
+        specular_color: self.read.read_vec3::<C>()?,
         specular_strength: self.read.read_f32::<LE>()?,
-        ambient_color: self.read.read_vec3()?,
-        edge_color: self.read.read_vec4()?,
+        ambient_color: self.read.read_vec3::<C>()?,
+        edge_color: self.read.read_vec4::<C>()?,
         edge_scale: self.read.read_f32::<LE>()?,
-        texture_tint: self.read.read_vec4()?,
-        environment_tint: self.read.read_vec4()?,
-        toon_tint: self.read.read_vec4()?,
+        texture_tint: self.read.read_vec4::<C>()?,
+        environment_tint: self.read.read_vec4::<C>()?,
+        toon_tint: self.read.read_vec4::<C>()?,
       })
     }
 
     Ok(offsets)
   }
 
-  fn next_impulse_offsets<RBI: Index>(&mut self, count: u32) -> Result<Vec<ImpulseOffset<RBI>>> {
+  fn next_impulse_offsets<C: Config>(&mut self, count: u32) -> Result<Vec<ImpulseOffset<C>>> {
     let mut offsets = Vec::with_capacity(count as usize);
 
     for _ in 0..count {
       offsets.push(ImpulseOffset {
         rigid_body: self.read.read_index(self.settings.rigidbody_index_size)?,
         local: self.read.read_u8()? != 0,
-        velocity: self.read.read_vec3()?,
-        torque: self.read.read_vec3()?,
+        velocity: self.read.read_vec3::<C>()?,
+        torque: self.read.read_vec3::<C>()?,
       })
     }
 
@@ -175,23 +168,18 @@ impl<R: Read> MorphReader<R> {
   }
 }
 
-pub struct MorphIterator<'a, R, I = i32, VI = i32, BI = i32, MI = i32, RBI = i32> {
+pub struct MorphIterator<'a, R, C> {
   reader: &'a mut MorphReader<R>,
-  phantom: PhantomData<(I, VI, BI, MI, RBI)>,
+  phantom: PhantomData<C>,
 }
 
-impl<R, I, VI, BI, MI, RBI> Iterator for MorphIterator<'_, R, I, VI, BI, MI, RBI>
-where
-  R: Read,
-  I: Index,
-  VI: VertexIndex,
-  BI: Index,
-  MI: Index,
-  RBI: Index,
-{
-  type Item = Result<Morph<I, VI, BI, MI, RBI>>;
+impl<R: Read, C: Config> Iterator for MorphIterator<'_, R, C> {
+  type Item = Result<Morph<C>>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

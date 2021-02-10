@@ -1,6 +1,6 @@
 use crate::{
   reader::{helpers::ReadHelpers, SurfaceReader},
-  Result, Settings,
+  DefaultConfig, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use std::io::Read;
@@ -15,7 +15,7 @@ pub struct TextureReader<R> {
 impl<R: Read> TextureReader<R> {
   pub fn new(mut v: SurfaceReader<R>) -> Result<TextureReader<R>> {
     while v.remaining > 0 {
-      v.next_surface::<i32>()?;
+      v.next_surface::<DefaultConfig>()?;
     }
     let count = v.read.read_i32::<LE>()?;
 
@@ -50,6 +50,9 @@ impl<R: Read> Iterator for TextureIterator<'_, R> {
   type Item = Result<String>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

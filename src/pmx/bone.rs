@@ -2,6 +2,8 @@ use enumflags2::BitFlags;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
 
+use crate::{display::DisplayOption, Config};
+
 #[derive(BitFlags, Copy, Clone, PartialEq, Debug)]
 #[repr(u16)]
 pub enum BoneFlags {
@@ -30,53 +32,67 @@ impl Display for BoneFlagsFmt {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Connection<I> {
-  Index(I),
-  Position([f32; 3]),
+pub enum Connection<C: Config> {
+  Index(C::BoneIndex),
+  Position(C::Vec3),
 }
 
-impl<I: Display> Display for Connection<I> {
+impl<C: Config> Display for Connection<C>
+where
+  C::BoneIndex: Display,
+  C::Vec3: Display,
+{
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
     match self {
       Connection::Index(t) => write!(f, "index({})", t),
-      Connection::Position(i) => write!(f, "offset({:?})", i),
+      Connection::Position(i) => write!(f, "offset({})", i),
     }
   }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Additional<I> {
-  pub parent: I,
+pub struct Additional<C: Config> {
+  pub parent: C::BoneIndex,
   pub rate: f32,
 }
 
-impl<I: Display> Display for Additional<I> {
+impl<C: Config> Display for Additional<C>
+where
+  C::BoneIndex: Display,
+{
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
     write!(f, "{} at rate {}", self.parent, self.rate)
   }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct LocalAxis {
-  pub x: [f32; 3],
-  pub z: [f32; 3],
+pub struct LocalAxis<C: Config> {
+  pub x: C::Vec3,
+  pub z: C::Vec3,
 }
 
-impl Display for LocalAxis {
+impl<C: Config> Display for LocalAxis<C>
+where
+  C::Vec3: Display,
+{
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-    write!(f, "x: {:?} z: {:?}", self.x, self.z)
+    write!(f, "x: {} z: {}", self.x, self.z)
   }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct InverseKinematics<I> {
-  pub ik_bone: I,
+pub struct InverseKinematics<C: Config> {
+  pub ik_bone: C::BoneIndex,
   pub iterations: u32,
   pub limit_angle: f32,
-  pub links: Vec<IKLink<I>>,
+  pub links: Vec<IKLink<C>>,
 }
 
-impl<I: Display> Display for InverseKinematics<I> {
+impl<C: Config> Display for InverseKinematics<C>
+where
+  C::BoneIndex: Display,
+  C::Vec3: Display,
+{
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
     write!(
       f,
@@ -90,40 +106,53 @@ impl<I: Display> Display for InverseKinematics<I> {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct IKLink<I> {
-  pub ik_bone: I,
-  pub limits: Option<([f32; 3], [f32; 3])>,
+pub struct IKLink<C: Config> {
+  pub ik_bone: C::BoneIndex,
+  pub limits: Option<(C::Vec3, C::Vec3)>,
 }
 
-impl<I: Display> Display for IKLink<I> {
+impl<C: Config> Display for IKLink<C>
+where
+  C::BoneIndex: Display,
+  C::Vec3: Display,
+{
   fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-    write!(f, "link: {} limits: {:?}", self.ik_bone, self.limits)
+    write!(f, "link: {} ", self.ik_bone,)?;
+    if let Some((ref low, ref high)) = self.limits {
+      write!(f, "limits: [{} - {}]", low, high)
+    } else {
+      write!(f, "unlimited")
+    }
   }
 }
 
-pub struct Bone<I> {
+pub struct Bone<C: Config> {
   pub local_name: String,
   pub universal_name: String,
-  pub position: [f32; 3],
-  pub parent: I,
+  pub position: C::Vec3,
+  pub parent: C::BoneIndex,
   pub transform_level: i32,
   pub bone_flags: BitFlags<BoneFlags>,
-  pub connection: Connection<I>,
-  pub additional: Option<Additional<I>>,
-  pub fixed_axis: Option<[f32; 3]>,
-  pub local_axis: Option<LocalAxis>,
+  pub connection: Connection<C>,
+  pub additional: Option<Additional<C>>,
+  pub fixed_axis: Option<C::Vec3>,
+  pub local_axis: Option<LocalAxis<C>>,
   pub external_parent_transform: Option<i32>,
-  pub inverse_kinematics: Option<InverseKinematics<I>>,
+  pub inverse_kinematics: Option<InverseKinematics<C>>,
 }
 
-impl<I: Display> Display for Bone<I> {
+impl<C: Config> Display for Bone<C>
+where
+  C::BoneIndex: Display,
+  C::Vec3: Display,
+{
   fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
     write!(
       f,
       r"local name: {}, universal name: {},
-position: {:?}, parent: {}, transform level: {},
+position: {}, parent: {}, transform level: {},
 flags: {},
-connection: {}, additional: {}, fixed axis: {:?}, local axis {}, parent transform: {},
+connection: {}, additional: {}, fixed axis: {}, local axis {}, parent transform: {},
 inverse kinematics: {}",
       self.local_name,
       self.universal_name,
@@ -132,18 +161,11 @@ inverse kinematics: {}",
       self.transform_level,
       BoneFlagsFmt(self.bone_flags),
       self.connection,
-      print_option(&self.additional),
-      self.fixed_axis,
-      print_option(&self.local_axis),
-      print_option(&self.external_parent_transform),
-      print_option(&self.inverse_kinematics)
+      DisplayOption::new(&self.additional),
+      DisplayOption::new(&self.fixed_axis),
+      DisplayOption::new(&self.local_axis),
+      DisplayOption::new(&self.external_parent_transform),
+      DisplayOption::new(&self.inverse_kinematics)
     )
   }
-}
-
-fn print_option<T: Display>(val: &Option<T>) -> String {
-  val
-    .as_ref()
-    .map(ToString::to_string)
-    .unwrap_or_else(|| "None".to_string())
 }

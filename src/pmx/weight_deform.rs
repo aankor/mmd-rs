@@ -1,48 +1,50 @@
-pub struct Bdef1<I> {
-  pub bone_index: I,
+use crate::Config;
+
+pub struct Bdef1<C: Config> {
+  pub bone_index: C::BoneIndex,
 }
 
-pub struct Bdef2<I> {
-  pub bone_1_index: I,
-  pub bone_2_index: I,
+pub struct Bdef2<C: Config> {
+  pub bone_1_index: C::BoneIndex,
+  pub bone_2_index: C::BoneIndex,
   pub bone_1_weight: f32,
 }
 
-pub struct Bdef4<I> {
-  pub bone_1_index: I,
-  pub bone_2_index: I,
-  pub bone_3_index: I,
-  pub bone_4_index: I,
-  pub bone_1_weight: f32,
-  pub bone_2_weight: f32,
-  pub bone_3_weight: f32,
-  pub bone_4_weight: f32,
-}
-
-pub struct Sdef<I> {
-  pub bone_1_index: I,
-  pub bone_2_index: I,
-  pub bone_1_weight: f32,
-  pub c: [f32; 3],
-  pub r0: [f32; 3],
-  pub r1: [f32; 3],
-}
-
-pub struct Qdef<I> {
-  pub bone_1_index: I,
-  pub bone_2_index: I,
-  pub bone_3_index: I,
-  pub bone_4_index: I,
+pub struct Bdef4<C: Config> {
+  pub bone_1_index: C::BoneIndex,
+  pub bone_2_index: C::BoneIndex,
+  pub bone_3_index: C::BoneIndex,
+  pub bone_4_index: C::BoneIndex,
   pub bone_1_weight: f32,
   pub bone_2_weight: f32,
   pub bone_3_weight: f32,
   pub bone_4_weight: f32,
 }
 
-pub enum WeightDeform<I> {
-  Bdef1(Bdef1<I>),
-  Bdef2(Bdef2<I>),
-  Bdef4(Bdef4<I>),
-  Sdef(Sdef<I>),
-  Qdef(Qdef<I>),
+pub struct Sdef<C: Config> {
+  pub bone_1_index: C::BoneIndex,
+  pub bone_2_index: C::BoneIndex,
+  pub bone_1_weight: f32,
+  pub c: C::Vec3,
+  pub r0: C::Vec3,
+  pub r1: C::Vec3,
+}
+
+pub struct Qdef<C: Config> {
+  pub bone_1_index: C::BoneIndex,
+  pub bone_2_index: C::BoneIndex,
+  pub bone_3_index: C::BoneIndex,
+  pub bone_4_index: C::BoneIndex,
+  pub bone_1_weight: f32,
+  pub bone_2_weight: f32,
+  pub bone_3_weight: f32,
+  pub bone_4_weight: f32,
+}
+
+pub enum WeightDeform<C: Config> {
+  Bdef1(Bdef1<C>),
+  Bdef2(Bdef2<C>),
+  Bdef4(Bdef4<C>),
+  Sdef(Sdef<C>),
+  Qdef(Qdef<C>),
 }

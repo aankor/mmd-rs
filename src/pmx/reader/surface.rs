@@ -1,6 +1,6 @@
 use crate::{
   reader::{helpers::ReadHelpers, VertexReader},
-  Result, Settings, VertexIndex,
+  Config, DefaultConfig, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use std::io::Read;
@@ -16,7 +16,7 @@ pub struct SurfaceReader<R> {
 impl<R: Read> SurfaceReader<R> {
   pub fn new(mut v: VertexReader<R>) -> Result<SurfaceReader<R>> {
     while v.remaining > 0 {
-      v.next_vertex::<i32>()?;
+      v.next_vertex::<DefaultConfig>()?;
     }
     let count = v.read.read_i32::<LE>()?;
 
@@ -28,7 +28,7 @@ impl<R: Read> SurfaceReader<R> {
     })
   }
 
-  pub fn next_surface<I: VertexIndex>(&mut self) -> Result<Option<[I; 3]>> {
+  pub fn next_surface<C: Config>(&mut self) -> Result<Option<[C::VertexIndex; 3]>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -55,15 +55,18 @@ impl<R: Read> SurfaceReader<R> {
   }
 }
 
-pub struct SurfaceIterator<'a, R, I = i32> {
+pub struct SurfaceIterator<'a, R, C = DefaultConfig> {
   reader: &'a mut SurfaceReader<R>,
-  phantom: PhantomData<I>,
+  phantom: PhantomData<C>,
 }
 
-impl<R: Read, I: VertexIndex> Iterator for SurfaceIterator<'_, R, I> {
-  type Item = Result<[I; 3]>;
+impl<R: Read, C: Config> Iterator for SurfaceIterator<'_, R, C> {
+  type Item = Result<[C::VertexIndex; 3]>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next_surface().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next_surface::<C>()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

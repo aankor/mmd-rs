@@ -1,4 +1,4 @@
-use mmd::Error;
+use mmd::{DefaultConfig, Error};
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
@@ -27,19 +27,19 @@ fn main() -> Result<(), Error> {
 
   let mut materials = MaterialReader::<_>::new(textures)?;
   println!("\nMaterials:");
-  for (i, m) in materials.iter::<i32>().enumerate() {
+  for (i, m) in materials.iter::<DefaultConfig>().enumerate() {
     println!("\n{}) {}", i, m?);
   }
 
   let mut bones = BoneReader::<_>::new(materials)?;
   println!("\n\nBones:");
-  for (i, b) in bones.iter::<i32>().enumerate() {
+  for (i, b) in bones.iter::<DefaultConfig>().enumerate() {
     println!("\n{}) {}", i, b?);
   }
 
   let mut morphs = MorphReader::<_>::new(bones)?;
   println!("\n\nMorphs:");
-  for (i, b) in morphs.iter::<i32, i32, i32, i32, i32>().enumerate() {
+  for (i, b) in morphs.iter::<DefaultConfig>().enumerate() {
     println!("\n{}) {}", i, b?);
   }
 

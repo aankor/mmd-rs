@@ -17,8 +17,8 @@ pub enum Error {
   DecodeText(Cow<'static, str>),
   #[error(display = "Unknown weigh type {}", _0)]
   UnknownWeightType(u8),
-  #[error(display = "Index overflow")]
-  IndexOverflow,
+  #[error(display = "Index overflow {}", _0)]
+  IndexOverflow(i64),
   #[error(display = "Invalid environment blendMode {}", _0)]
   InvalidEnvironmentBlendMode(u8),
   #[error(display = "Invalid toon reference {}", _0)]

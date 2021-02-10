@@ -13,3 +13,5 @@ pub use self::pmx::settings::Settings;
 pub use self::pmx::types::*;
 pub use self::pmx::vertex::Vertex;
 pub use self::pmx::weight_deform::WeightDeform;
+
+mod display;

@@ -1,7 +1,7 @@
 use crate::{
   pmx::material::*,
   reader::{helpers::ReadHelpers, TextureReader},
-  Error, Index, Result, Settings,
+  Config, DefaultConfig, Error, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use enumflags2::BitFlags;
@@ -31,7 +31,7 @@ impl<R: Read> MaterialReader<R> {
     })
   }
 
-  pub fn next<I: Index>(&mut self) -> Result<Option<Material<I>>> {
+  pub fn next<C: Config>(&mut self) -> Result<Option<Material<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -41,12 +41,12 @@ impl<R: Read> MaterialReader<R> {
     Ok(Some(Material {
       local_name: self.read.read_text(self.settings.text_encoding)?,
       universal_name: self.read.read_text(self.settings.text_encoding)?,
-      diffuse_color: self.read.read_vec4()?,
-      specular_color: self.read.read_vec3()?,
+      diffuse_color: self.read.read_vec4::<C>()?,
+      specular_color: self.read.read_vec3::<C>()?,
       specular_strength: self.read.read_f32::<LE>()?,
-      ambient_color: self.read.read_vec3()?,
+      ambient_color: self.read.read_vec3::<C>()?,
       draw_flags: BitFlags::from_bits(self.read.read_u8()?).unwrap(),
-      edge_color: self.read.read_vec4()?,
+      edge_color: self.read.read_vec4::<C>()?,
       edge_scale: self.read.read_f32::<LE>()?,
       texture_index: self.read.read_index(self.settings.texture_index_size)?,
       environment_index: self.read.read_index(self.settings.texture_index_size)?,
@@ -61,7 +61,7 @@ impl<R: Read> MaterialReader<R> {
     }))
   }
 
-  pub fn iter<I>(&mut self) -> MaterialIterator<R, I> {
+  pub fn iter<C>(&mut self) -> MaterialIterator<R, C> {
     MaterialIterator {
       reader: self,
       phantom: PhantomData,
@@ -69,15 +69,18 @@ impl<R: Read> MaterialReader<R> {
   }
 }
 
-pub struct MaterialIterator<'a, R, I = i32> {
+pub struct MaterialIterator<'a, R, C = DefaultConfig> {
   reader: &'a mut MaterialReader<R>,
-  phantom: PhantomData<I>,
+  phantom: PhantomData<C>,
 }
 
-impl<R: Read, I: Index> Iterator for MaterialIterator<'_, R, I> {
-  type Item = Result<Material<I>>;
+impl<R: Read, C: Config> Iterator for MaterialIterator<'_, R, C> {
+  type Item = Result<Material<C>>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

@@ -1,7 +1,7 @@
 use crate::{
   pmx::bone::*,
   reader::{helpers::ReadHelpers, MaterialReader},
-  Error, Index, Result, Settings,
+  Config, DefaultConfig, Error, Result, Settings,
 };
 use byteorder::{ReadBytesExt, LE};
 use enumflags2::BitFlags;
@@ -18,7 +18,7 @@ pub struct BoneReader<R> {
 impl<R: Read> BoneReader<R> {
   pub fn new(mut v: MaterialReader<R>) -> Result<BoneReader<R>> {
     while v.remaining > 0 {
-      v.next::<i32>()?;
+      v.next::<DefaultConfig>()?;
     }
     let count = v.read.read_i32::<LE>()?;
 
@@ -30,7 +30,7 @@ impl<R: Read> BoneReader<R> {
     })
   }
 
-  pub fn next<I: Index>(&mut self) -> Result<Option<Bone<I>>> {
+  pub fn next<C: Config>(&mut self) -> Result<Option<Bone<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
@@ -39,7 +39,7 @@ impl<R: Read> BoneReader<R> {
 
     let local_name = self.read.read_text(self.settings.text_encoding)?;
     let universal_name = self.read.read_text(self.settings.text_encoding)?;
-    let position = self.read.read_vec3()?;
+    let position = self.read.read_vec3::<C>()?;
     let parent = self.read.read_index(self.settings.bone_index_size)?;
     let transform_level = self.read.read_i32::<LE>()?;
     let bone_flags = BitFlags::from_bits(self.read.read_u16::<LE>()?).unwrap();
@@ -51,7 +51,7 @@ impl<R: Read> BoneReader<R> {
           self.read.read_index(self.settings.bone_index_size)?,
         ))
       })
-      .unwrap_or_else(|| Ok::<_, Error>(Connection::Position(self.read.read_vec3()?)))?;
+      .unwrap_or_else(|| Ok::<_, Error>(Connection::Position(self.read.read_vec3::<C>()?)))?;
 
     let additional = bone_flags
       .intersects(BoneFlags::AddRotation | BoneFlags::AddMovement)
@@ -65,15 +65,15 @@ impl<R: Read> BoneReader<R> {
 
     let fixed_axis = bone_flags
       .contains(BoneFlags::FixedAxis)
-      .then(|| self.read.read_vec3())
+      .then(|| self.read.read_vec3::<C>())
       .transpose()?;
 
     let local_axis = bone_flags
       .contains(BoneFlags::LocalAxis)
       .then(|| {
         Ok::<_, Error>(LocalAxis {
-          x: self.read.read_vec3()?,
-          z: self.read.read_vec3()?,
+          x: self.read.read_vec3::<C>()?,
+          z: self.read.read_vec3::<C>()?,
         })
       })
       .transpose()?;
@@ -90,9 +90,11 @@ impl<R: Read> BoneReader<R> {
       let link_count = self.read.read_u32::<LE>()? as usize;
       let mut links = Vec::with_capacity(link_count);
       for _i in 0..link_count {
-        let ik_bone = self.read.read_index::<I>(self.settings.bone_index_size)?;
+        let ik_bone = self
+          .read
+          .read_index::<C::BoneIndex>(self.settings.bone_index_size)?;
         let limits = if self.read.read_u8()? != 0 {
-          Some((self.read.read_vec3()?, self.read.read_vec3()?))
+          Some((self.read.read_vec3::<C>()?, self.read.read_vec3::<C>()?))
         } else {
           None
         };
@@ -125,7 +127,7 @@ impl<R: Read> BoneReader<R> {
     }))
   }
 
-  pub fn iter<I>(&mut self) -> BoneIterator<R, I> {
+  pub fn iter<C>(&mut self) -> BoneIterator<R, C> {
     BoneIterator {
       reader: self,
       phantom: PhantomData,
@@ -133,15 +135,18 @@ impl<R: Read> BoneReader<R> {
   }
 }
 
-pub struct BoneIterator<'a, R, I = i32> {
+pub struct BoneIterator<'a, R, C = DefaultConfig> {
   reader: &'a mut BoneReader<R>,
-  phantom: PhantomData<I>,
+  phantom: PhantomData<C>,
 }
 
-impl<R: Read, I: Index> Iterator for BoneIterator<'_, R, I> {
-  type Item = Result<Bone<I>>;
+impl<R: Read, C: Config> Iterator for BoneIterator<'_, R, C> {
+  type Item = Result<Bone<C>>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

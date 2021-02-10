@@ -1,7 +1,7 @@
 use crate::{
   pmx::weight_deform::*,
   reader::{helpers::ReadHelpers, HeaderReader},
-  Error, Index, Result, Settings, Vertex,
+  Config, DefaultConfig, Error, Result, Settings, Vertex,
 };
 use byteorder::{ReadBytesExt, LE};
 use std::io::Read;
@@ -25,28 +25,27 @@ impl<R: Read> VertexReader<R> {
     })
   }
 
-  pub fn next_vertex<I: Index>(&mut self) -> Result<Option<Vertex<I>>> {
+  pub fn next_vertex<C: Config>(&mut self) -> Result<Option<Vertex<C>>> {
     if self.remaining == 0 {
       return Ok(None);
     }
-    let position = self.read.read_vec3()?;
-    let normal = self.read.read_vec3()?;
-    let uv = self.read.read_vec2()?;
-    let mut additional = [[0f32; 4]; 4];
-    for i in 0..self.settings.additional_vec4_count {
-      additional[i as usize] = self.read.read_vec4()?;
-    }
+    let position = self.read.read_vec3::<C>()?;
+    let normal = self.read.read_vec3::<C>()?;
+    let uv = self.read.read_vec2::<C>()?;
+    let additional = (0..self.settings.additional_vec4_count)
+      .map(|_| self.read.read_vec4::<C>())
+      .collect::<Result<C::AdditionalVec4s>>()?;
 
     let weight_deform = match self.read.read_u8()? {
-      0u8 => WeightDeform::Bdef1(Bdef1::<I> {
+      0u8 => WeightDeform::Bdef1(Bdef1 {
         bone_index: self.read.read_index(self.settings.bone_index_size)?,
       }),
-      1u8 => WeightDeform::Bdef2(Bdef2::<I> {
+      1u8 => WeightDeform::Bdef2(Bdef2 {
         bone_1_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_2_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_1_weight: self.read.read_f32::<LE>()?,
       }),
-      2u8 => WeightDeform::Bdef4(Bdef4::<I> {
+      2u8 => WeightDeform::Bdef4(Bdef4 {
         bone_1_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_2_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_3_index: self.read.read_index(self.settings.bone_index_size)?,
@@ -56,15 +55,15 @@ impl<R: Read> VertexReader<R> {
         bone_3_weight: self.read.read_f32::<LE>()?,
         bone_4_weight: self.read.read_f32::<LE>()?,
       }),
-      3u8 => WeightDeform::Sdef(Sdef::<I> {
+      3u8 => WeightDeform::Sdef(Sdef {
         bone_1_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_2_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_1_weight: self.read.read_f32::<LE>()?,
-        c: self.read.read_vec3()?,
-        r0: self.read.read_vec3()?,
-        r1: self.read.read_vec3()?,
+        c: self.read.read_vec3::<C>()?,
+        r0: self.read.read_vec3::<C>()?,
+        r1: self.read.read_vec3::<C>()?,
       }),
-      4u8 => WeightDeform::Qdef(Qdef::<I> {
+      4u8 => WeightDeform::Qdef(Qdef {
         bone_1_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_2_index: self.read.read_index(self.settings.bone_index_size)?,
         bone_3_index: self.read.read_index(self.settings.bone_index_size)?,
@@ -88,7 +87,7 @@ impl<R: Read> VertexReader<R> {
     }))
   }
 
-  pub fn iter<I>(&mut self) -> VertexIterator<R, I> {
+  pub fn iter<C>(&mut self) -> VertexIterator<R, C> {
     VertexIterator {
       reader: self,
       phantom: PhantomData,
@@ -96,15 +95,18 @@ impl<R: Read> VertexReader<R> {
   }
 }
 
-pub struct VertexIterator<'a, R, I = i32> {
+pub struct VertexIterator<'a, R, C = DefaultConfig> {
   reader: &'a mut VertexReader<R>,
-  phantom: PhantomData<I>,
+  phantom: PhantomData<C>,
 }
 
-impl<'a, R: Read, I: Index> Iterator for VertexIterator<'a, R, I> {
-  type Item = Result<Vertex<I>>;
+impl<'a, R: Read, C: Config> Iterator for VertexIterator<'a, R, C> {
+  type Item = Result<Vertex<C>>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    self.reader.next_vertex().map_or(None, |v| v.map(Ok))
+    self
+      .reader
+      .next_vertex()
+      .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }
