@@ -13,24 +13,36 @@ pub struct BoneReader<R> {
   pub count: i32,
   pub remaining: i32,
   pub(crate) read: R,
+  pub(crate) poison: bool,
 }
 
 impl<R: Read> BoneReader<R> {
-  pub fn new(mut v: MaterialReader<R>) -> Result<BoneReader<R>> {
-    while v.remaining > 0 {
-      v.next::<DefaultConfig>()?;
+  pub fn new(mut m: MaterialReader<R>) -> Result<BoneReader<R>> {
+    assert!(!m.poison);
+    while m.remaining > 0 {
+      m.next::<DefaultConfig>()?;
     }
-    let count = v.read.read_i32::<LE>()?;
+    let count = m.read.read_i32::<LE>()?;
 
     Ok(BoneReader {
-      settings: v.settings,
+      settings: m.settings,
       count,
       remaining: count,
-      read: v.read,
+      read: m.read,
+      poison: false,
     })
   }
 
   pub fn next<C: Config>(&mut self) -> Result<Option<Bone<C>>> {
+    assert!(!self.poison);
+    let result = self.next_impl::<C>();
+    if result.is_err() {
+      self.poison = true;
+    }
+    result
+  }
+
+  fn next_impl<C: Config>(&mut self) -> Result<Option<Bone<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }

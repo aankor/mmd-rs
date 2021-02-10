@@ -14,24 +14,36 @@ pub struct MaterialReader<R> {
   pub count: i32,
   pub remaining: i32,
   pub(crate) read: R,
+  pub(crate) poison: bool,
 }
 
 impl<R: Read> MaterialReader<R> {
-  pub fn new(mut v: TextureReader<R>) -> Result<MaterialReader<R>> {
-    while v.remaining > 0 {
-      v.next()?;
+  pub fn new(mut t: TextureReader<R>) -> Result<MaterialReader<R>> {
+    assert!(!t.poison);
+    while t.remaining > 0 {
+      t.next()?;
     }
-    let count = v.read.read_i32::<LE>()?;
+    let count = t.read.read_i32::<LE>()?;
 
     Ok(MaterialReader {
-      settings: v.settings,
+      settings: t.settings,
       count,
       remaining: count,
-      read: v.read,
+      read: t.read,
+      poison: false,
     })
   }
 
   pub fn next<C: Config>(&mut self) -> Result<Option<Material<C>>> {
+    assert!(!self.poison);
+    let result = self.next_impl::<C>();
+    if result.is_err() {
+      self.poison = true;
+    }
+    result
+  }
+
+  fn next_impl<C: Config>(&mut self) -> Result<Option<Material<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }

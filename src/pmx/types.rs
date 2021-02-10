@@ -86,7 +86,7 @@ pub trait Config {
 pub struct DefaultConfig;
 
 impl Config for DefaultConfig {
-  type VertexIndex = u32;
+  type VertexIndex = i32;
   type TextureIndex = i32;
   type MaterialIndex = i32;
   type BoneIndex = i32;

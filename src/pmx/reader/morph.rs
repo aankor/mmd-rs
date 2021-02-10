@@ -13,10 +13,12 @@ pub struct MorphReader<R> {
   pub count: i32,
   pub remaining: i32,
   pub(crate) read: R,
+  pub(crate) poison: bool,
 }
 
 impl<R: Read> MorphReader<R> {
   pub fn new(mut b: BoneReader<R>) -> Result<MorphReader<R>> {
+    assert!(!b.poison);
     while b.remaining > 0 {
       b.next::<DefaultConfig>()?;
     }
@@ -27,10 +29,20 @@ impl<R: Read> MorphReader<R> {
       count,
       remaining: count,
       read: b.read,
+      poison: false,
     })
   }
 
   pub fn next<C: Config>(&mut self) -> Result<Option<Morph<C>>> {
+    assert!(!self.poison);
+    let result = self.next_impl::<C>();
+    if result.is_err() {
+      self.poison = true;
+    }
+    result
+  }
+
+  fn next_impl<C: Config>(&mut self) -> Result<Option<Morph<C>>> {
     if self.remaining <= 0 {
       return Ok(None);
     }

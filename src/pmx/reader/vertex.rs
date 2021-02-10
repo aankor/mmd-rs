@@ -12,6 +12,7 @@ pub struct VertexReader<R> {
   pub count: i32,
   pub remaining: i32,
   pub(crate) read: R,
+  pub(crate) poison: bool,
 }
 
 impl<R: Read> VertexReader<R> {
@@ -22,10 +23,20 @@ impl<R: Read> VertexReader<R> {
       count,
       remaining: count,
       read: header.read,
+      poison: false,
     })
   }
 
-  pub fn next_vertex<C: Config>(&mut self) -> Result<Option<Vertex<C>>> {
+  pub fn next<C: Config>(&mut self) -> Result<Option<Vertex<C>>> {
+    assert!(!self.poison);
+    let result = self.next_impl::<C>();
+    if result.is_err() {
+      self.poison = true;
+    }
+    result
+  }
+
+  fn next_impl<C: Config>(&mut self) -> Result<Option<Vertex<C>>> {
     if self.remaining == 0 {
       return Ok(None);
     }
@@ -106,7 +117,7 @@ impl<'a, R: Read, C: Config> Iterator for VertexIterator<'a, R, C> {
   fn next(&mut self) -> Option<Self::Item> {
     self
       .reader
-      .next_vertex()
+      .next()
       .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
 }

@@ -10,24 +10,36 @@ pub struct TextureReader<R> {
   pub count: i32,
   pub remaining: i32,
   pub(crate) read: R,
+  pub(crate) poison: bool,
 }
 
 impl<R: Read> TextureReader<R> {
-  pub fn new(mut v: SurfaceReader<R>) -> Result<TextureReader<R>> {
-    while v.remaining > 0 {
-      v.next_surface::<DefaultConfig>()?;
+  pub fn new(mut s: SurfaceReader<R>) -> Result<TextureReader<R>> {
+    assert!(!s.poison);
+    while s.remaining > 0 {
+      s.next::<DefaultConfig>()?;
     }
-    let count = v.read.read_i32::<LE>()?;
+    let count = s.read.read_i32::<LE>()?;
 
     Ok(TextureReader {
-      settings: v.settings,
+      settings: s.settings,
       count,
       remaining: count,
-      read: v.read,
+      read: s.read,
+      poison: false,
     })
   }
 
   pub fn next(&mut self) -> Result<Option<String>> {
+    assert!(!self.poison);
+    let result = self.next_impl();
+    if result.is_err() {
+      self.poison = true;
+    }
+    result
+  }
+
+  fn next_impl(&mut self) -> Result<Option<String>> {
     if self.remaining <= 0 {
       return Ok(None);
     }
