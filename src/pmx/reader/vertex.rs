@@ -4,8 +4,8 @@ use crate::{
   Config, DefaultConfig, Error, Result, Settings, Vertex,
 };
 use byteorder::{ReadBytesExt, LE};
-use std::io::Read;
 use std::marker::PhantomData;
+use std::{io::Read, usize};
 
 pub struct VertexReader<R> {
   pub settings: Settings,
@@ -119,5 +119,18 @@ impl<'a, R: Read, C: Config> Iterator for VertexIterator<'a, R, C> {
       .reader
       .next()
       .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    (
+      self.reader.remaining as usize,
+      Some(self.reader.remaining as usize),
+    )
+  }
+}
+
+impl<R: Read, C: Config> ExactSizeIterator for VertexIterator<'_, R, C> {
+  fn len(&self) -> usize {
+    self.reader.remaining as usize
   }
 }

@@ -5,8 +5,8 @@ use crate::{
 };
 use byteorder::{ReadBytesExt, LE};
 use enumflags2::BitFlags;
-use std::io::Read;
 use std::marker::PhantomData;
+use std::{io::Read, usize};
 
 pub struct BoneReader<R> {
   pub settings: Settings,
@@ -160,5 +160,18 @@ impl<R: Read, C: Config> Iterator for BoneIterator<'_, R, C> {
       .reader
       .next()
       .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
+  }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    (
+      self.reader.remaining as usize,
+      Some(self.reader.remaining as usize),
+    )
+  }
+}
+
+impl<R: Read, C: Config> ExactSizeIterator for BoneIterator<'_, R, C> {
+  fn len(&self) -> usize {
+    self.reader.remaining as usize
   }
 }

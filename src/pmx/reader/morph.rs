@@ -194,4 +194,17 @@ impl<R: Read, C: Config> Iterator for MorphIterator<'_, R, C> {
       .next()
       .map_or_else(|e| Some(Err(e)), |v| v.map(Ok))
   }
+
+  fn size_hint(&self) -> (usize, Option<usize>) {
+    (
+      self.reader.remaining as usize,
+      Some(self.reader.remaining as usize),
+    )
+  }
+}
+
+impl<R: Read, C: Config> ExactSizeIterator for MorphIterator<'_, R, C> {
+  fn len(&self) -> usize {
+    self.reader.remaining as usize
+  }
 }
