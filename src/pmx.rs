@@ -1,4 +1,5 @@
 pub mod bone;
+pub mod display;
 pub mod error;
 pub mod material;
 pub mod morph;

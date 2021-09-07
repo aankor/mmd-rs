@@ -39,8 +39,14 @@ fn main() -> Result<(), Error> {
 
   let mut morphs = MorphReader::<_>::new(bones)?;
   println!("\n\nMorphs:");
-  for (i, b) in morphs.iter::<DefaultConfig>().enumerate() {
-    println!("\n{}) {}", i, b?);
+  for (i, m) in morphs.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, m?);
+  }
+
+  let mut displays = DisplayReader::<_>::new(morphs)?;
+  println!("\n\nDisplay Frames:");
+  for (i, d) in displays.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, d?);
   }
 
   Ok(())

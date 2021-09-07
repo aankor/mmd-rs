@@ -27,6 +27,8 @@ pub enum Error {
   InvalidMorphType(u8),
   #[error(display = "Invalid material offset method {}", _0)]
   InvalidMaterialOffsetMethod(u8),
+  #[error(display = "Invalid display frame type {}", _0)]
+  InvalidFrameType(u8),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

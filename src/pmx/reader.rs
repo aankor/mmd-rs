@@ -1,4 +1,5 @@
 pub mod bone;
+pub mod display;
 pub mod header;
 mod helpers;
 pub mod material;
@@ -8,6 +9,7 @@ pub mod texture;
 pub mod vertex;
 
 pub use bone::BoneReader;
+pub use display::DisplayReader;
 pub use header::HeaderReader;
 pub use material::MaterialReader;
 pub use morph::MorphReader;
