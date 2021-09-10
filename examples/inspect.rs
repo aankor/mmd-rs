@@ -49,5 +49,11 @@ fn main() -> Result<(), Error> {
     println!("\n{}) {}", i, d?);
   }
 
+  let mut rigid_bodies = RigidBodyReader::<_>::new(displays)?;
+  println!("\n\nRigid Bodies:");
+  for (i, r) in rigid_bodies.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, r?);
+  }
+
   Ok(())
 }

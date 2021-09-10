@@ -29,6 +29,10 @@ pub enum Error {
   InvalidMaterialOffsetMethod(u8),
   #[error(display = "Invalid display frame type {}", _0)]
   InvalidFrameType(u8),
+  #[error(display = "Invalid rigid body shape type {}", _0)]
+  InvalidShapeType(u8),
+  #[error(display = "Invalid rigid body physics mode {}", _0)]
+  InvalidPhysicsMode(u8),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
