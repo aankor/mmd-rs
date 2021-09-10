@@ -1,6 +1,7 @@
 pub mod bone;
 pub mod display;
 pub mod error;
+pub mod joint;
 pub mod material;
 pub mod morph;
 pub mod reader;

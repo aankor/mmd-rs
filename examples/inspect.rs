@@ -55,5 +55,11 @@ fn main() -> Result<(), Error> {
     println!("\n{}) {}", i, r?);
   }
 
+  let mut joints = JointReader::<_>::new(rigid_bodies)?;
+  println!("\n\nJoints:");
+  for (i, j) in joints.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, j?);
+  }
+
   Ok(())
 }

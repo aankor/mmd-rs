@@ -33,6 +33,8 @@ pub enum Error {
   InvalidShapeType(u8),
   #[error(display = "Invalid rigid body physics mode {}", _0)]
   InvalidPhysicsMode(u8),
+  #[error(display = "Invalid joint type {}", _0)]
+  InvalidJointType(u8),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
