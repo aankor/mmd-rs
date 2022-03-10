@@ -39,8 +39,26 @@ fn main() -> Result<(), Error> {
 
   let mut morphs = MorphReader::<_>::new(bones)?;
   println!("\n\nMorphs:");
-  for (i, b) in morphs.iter::<DefaultConfig>().enumerate() {
-    println!("\n{}) {}", i, b?);
+  for (i, m) in morphs.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, m?);
+  }
+
+  let mut displays = DisplayReader::<_>::new(morphs)?;
+  println!("\n\nDisplay Frames:");
+  for (i, d) in displays.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, d?);
+  }
+
+  let mut rigid_bodies = RigidBodyReader::<_>::new(displays)?;
+  println!("\n\nRigid Bodies:");
+  for (i, r) in rigid_bodies.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, r?);
+  }
+
+  let mut joints = JointReader::<_>::new(rigid_bodies)?;
+  println!("\n\nJoints:");
+  for (i, j) in joints.iter::<DefaultConfig>().enumerate() {
+    println!("\n{}) {}", i, j?);
   }
 
   Ok(())
